@@ -1,0 +1,69 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            artifact-name: FFLF-Extractor-Windows
+          - os: ubuntu-latest
+            platform: linux
+            artifact-name: FFLF-Extractor-Linux
+          - os: macos-latest
+            platform: mac
+            artifact-name: FFLF-Extractor-macOS
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Electron App (Windows)
+        if: matrix.platform == 'win'
+        run: npx electron-builder --win portable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron App (Linux)
+        if: matrix.platform == 'linux'
+        run: npx electron-builder --linux AppImage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron App (macOS)
+        if: matrix.platform == 'mac'
+        run: npx electron-builder --mac dmg
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.dmg
+          if-no-files-found: warn
+          retention-days: 30

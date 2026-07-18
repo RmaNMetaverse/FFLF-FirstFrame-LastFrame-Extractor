@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FFLF Extractor</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Custom Title Bar -->
+  <div class="titlebar">FirstFrame LastFrame Extractor</div>
+
+  <div class="container">
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-box">FFLF</div>
+      </div>
+      <h1>FirstFrame LastFrame Extractor</h1>
+      <p class="subtitle">Extract first and last frames from any video format, instantly, in the original folder.</p>
+    </header>
+
+    <!-- Drag & Drop Zone -->
+    <div id="dropzone" class="dropzone">
+      <div class="dropzone-content">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5h10.5a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0017.25 4.5H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h3>Drag & Drop Video Files</h3>
+        <p>or click to browse your computer</p>
+      </div>
+    </div>
+
+    <!-- Processing Queue & Results -->
+    <section class="queue-section" id="queueSection" style="display: none;">
+      <h2>Processing Queue</h2>
+      <div class="queue-list" id="queueList">
+        <!-- Processed video cards will go here dynamically -->
+      </div>
+    </section>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
