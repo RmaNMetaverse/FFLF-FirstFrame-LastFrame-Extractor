@@ -253,3 +253,55 @@ body {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+/* ─── Card Actions (download buttons, open folder) ──────────────────────── */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: var(--primary-hover);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-download:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-download-lf {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: var(--success);
+}
+
+.btn-download-lf:hover {
+  background: var(--success);
+  border-color: var(--success);
+  color: #ffffff;
+}
+
+/* ─── Web Mode Overrides ─────────────────────────────────────────────────── */
+.web-mode .titlebar {
+  display: none;
+}
+
+.web-mode .container {
+  padding-top: 50px;
+}
