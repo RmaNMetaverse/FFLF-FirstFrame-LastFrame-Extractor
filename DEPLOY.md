@@ -226,3 +226,39 @@ Since this runs on a **local workplace network**:
 - **Auto-Cleanup**: Uploaded videos are deleted immediately after extraction. Frame files are cleaned up every 30 minutes.
 - **No Authentication**: This deployment assumes a trusted LAN. If exposed beyond the local network, add authentication (e.g., HTTP Basic Auth via nginx or a session-based middleware).
 - **MIME Filtering**: Only `video/*` MIME types are accepted by the upload endpoint.
+
+---
+
+## Troubleshooting
+
+### Server crashes when uploading a video (`ERR_CONNECTION_RESET`)
+
+**Most common cause:** `node_modules` was copied from a different OS (e.g. Windows → Linux). The `ffmpeg-static` and `ffprobe-static` packages contain platform-specific binaries that only work on the OS where `npm install` was run.
+
+**Fix:** Delete `node_modules` and reinstall on the server:
+
+```bash
+cd /opt/fflf-extractor
+rm -rf node_modules
+npm install --omit=dev
+```
+
+You can verify the binary works by running:
+
+```bash
+node -e "console.log(require('ffmpeg-static'))"
+# Should print a path like: /opt/fflf-extractor/node_modules/ffmpeg-static/ffmpeg
+
+# Then test it directly:
+/opt/fflf-extractor/node_modules/ffmpeg-static/ffmpeg -version
+```
+
+### Check server logs for errors
+
+If the server is running as a systemd service:
+
+```bash
+sudo journalctl -u fflf-extractor -n 50 --no-pager
+```
+
+Look for lines starting with `[FFLF]` — these will show the exact error (e.g., `ENOENT`, `EACCES`, binary path issues).

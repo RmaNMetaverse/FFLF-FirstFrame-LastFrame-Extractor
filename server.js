@@ -9,6 +9,16 @@ const { spawn } = require('child_process');
 const ffmpegPath = require('ffmpeg-static');
 const ffprobePath = require('ffprobe-static').path;
 
+// Startup diagnostics — log binary paths so deployment issues are obvious
+console.log(`[FFLF] ffmpeg  path: ${ffmpegPath}`);
+console.log(`[FFLF] ffprobe path: ${ffprobePath}`);
+if (!fs.existsSync(ffmpegPath)) {
+  console.error(`[FFLF] WARNING: ffmpeg binary not found at ${ffmpegPath}`);
+}
+if (!fs.existsSync(ffprobePath)) {
+  console.error(`[FFLF] WARNING: ffprobe binary not found at ${ffprobePath}`);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -167,6 +177,20 @@ app.get('/api/download/:jobId/:type', (req, res) => {
   res.download(filePath, targetFile);
 });
 
+// ─── Express Error Handler ──────────────────────────────────────────────────
+// Catches Multer errors (file too large, wrong MIME) and any other middleware errors.
+// Without this, unhandled errors crash the process.
+app.use((err, req, res, next) => {
+  console.error(`[FFLF] Express error: ${err.message}`);
+
+  // Multer-specific errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ success: false, error: 'File is too large. Maximum size is 2GB.' });
+  }
+
+  res.status(500).json({ success: false, error: err.message || 'Internal server error.' });
+});
+
 // ─── Cleanup: remove temp files older than 30 minutes ───────────────────────
 setInterval(() => {
   if (!fs.existsSync(UPLOAD_DIR)) return;
@@ -188,6 +212,16 @@ setInterval(() => {
     // Silently ignore cleanup errors
   }
 }, 10 * 60 * 1000); // Run every 10 minutes
+
+// ─── Process-level crash guards ─────────────────────────────────────────────
+// Prevent the server from crashing on unhandled errors.
+process.on('uncaughtException', (err) => {
+  console.error('[FFLF] Uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FFLF] Unhandled rejection:', reason);
+});
 
 // ─── Start server ───────────────────────────────────────────────────────────
 app.listen(PORT, HOST, () => {
