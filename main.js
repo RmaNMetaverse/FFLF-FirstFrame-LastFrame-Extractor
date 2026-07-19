@@ -48,6 +48,7 @@ function runProcess(cmd, args) {
     const proc = spawn(cmd, args);
     let stdout = '';
     let stderr = '';
+    proc.on('error', reject);
     proc.stdout.on('data', data => stdout += data);
     proc.stderr.on('data', data => stderr += data);
     proc.on('close', code => {
