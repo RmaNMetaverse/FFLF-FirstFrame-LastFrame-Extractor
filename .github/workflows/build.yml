@@ -3,6 +3,7 @@ name: Build & Release
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
 
@@ -69,3 +70,43 @@ jobs:
             dist/*.dmg
           if-no-files-found: warn
           retention-days: 30
+
+  # ──────────────────────────────────────────────────────────────
+  # Release job — runs only when a version tag (v*) is pushed
+  # ──────────────────────────────────────────────────────────────
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare Release Assets
+        run: |
+          mkdir -p release-assets
+
+          # Windows — portable .exe
+          find artifacts/FFLF-Extractor-Windows -name '*.exe' -exec cp {} release-assets/ \; 2>/dev/null || true
+
+          # Linux — .AppImage
+          find artifacts/FFLF-Extractor-Linux -name '*.AppImage' -exec cp {} release-assets/ \; 2>/dev/null || true
+
+          # macOS — .dmg
+          find artifacts/FFLF-Extractor-macOS -name '*.dmg' -exec cp {} release-assets/ \; 2>/dev/null || true
+
+          echo "=== Release assets ==="
+          ls -lh release-assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

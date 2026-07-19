@@ -39,13 +39,15 @@ npm start
 
 ## 📦 Download Pre-built Binaries
 
-Go to the [Actions tab](../../actions) of this repository, select the latest successful build, and download the artifact for your platform:
+Head to the **[Releases](../../releases/latest)** page and download the installer for your platform:
 
-| Platform | Format | Artifact Name |
-|----------|--------|---------------|
-| Windows  | Portable `.exe` | `FFLF-Extractor-Windows` |
-| Linux    | `.AppImage` | `FFLF-Extractor-Linux` |
-| macOS    | `.dmg` | `FFLF-Extractor-macOS` |
+| Platform | Format | File |
+|----------|--------|------|
+| Windows  | Portable `.exe` | `FFLF Extractor *.exe` |
+| Linux    | `.AppImage` | `FFLF-Extractor-*.AppImage` |
+| macOS    | `.dmg` | `FFLF Extractor-*.dmg` |
+
+> No build tools or GitHub account required — just download and run.
 
 ---
 
