@@ -20,13 +20,13 @@ This guide covers deploying the **FFLF Extractor** web application on a Linux se
 ## Architecture Overview
 
 ```
-Browser (LAN)  ──►  nginx (port 80)  ──►  Node.js Express (port 3000)
-                                                   │
-                                              FFmpeg/FFprobe
-                                                   │
-                                            Extracted frames
-                                                   │
-                                           Download response
+Browser (LAN)  ──►  nginx (port 80/443)  ──►  Node.js Express (port 6969)
+                                                     │
+                                                FFmpeg/FFprobe
+                                                     │
+                                              Extracted frames
+                                                     │
+                                             Download response
 ```
 
 - **nginx** acts as a reverse proxy, forwarding HTTP requests to the Node.js server.
@@ -63,65 +63,89 @@ npm install --omit=dev
 
 ## Running the Server
 
-### Quick Start
+### Quick Start (Custom Port 6969)
+
+Since you are running multiple Node.js applications on the same server, we run this app on custom port **6969** to avoid port conflicts (e.g. if another app is already using port 3000).
 
 ```bash
-npm run start:web
+PORT=6969 npm run start:web
 ```
 
 Output:
 ```
   ╔══════════════════════════════════════════════╗
   ║   FFLF Extractor — Web Server                ║
-  ║   Running at http://0.0.0.0:3000              ║
+  ║   Running at http://0.0.0.0:6969              ║
   ╚══════════════════════════════════════════════╝
 ```
 
-The server is now accessible at `http://YOUR_SERVER_IP:3000` from any device on the network.
+The server is now accessible locally at `http://YOUR_SERVER_IP:6969`.
 
-### Custom Port
-
-```bash
-PORT=8080 npm run start:web
-```
 
 ---
 
 ## nginx Configuration
 
-### 1. Copy the example config
+Rather than creating a new server configuration file, integrate the FFLF Extractor web application into your existing default configuration (`/etc/nginx/sites-available/default`), which already hosts other apps.
+
+### 1. Edit the Default Nginx Configuration
+
+Open the existing default Nginx configuration file:
 
 ```bash
-sudo cp nginx.example.conf /etc/nginx/sites-available/fflf-extractor
+sudo nano /etc/nginx/sites-available/default
 ```
 
-### 2. Edit the server name
+### 2. Add the FFLF Extractor Location Block
 
-```bash
-sudo nano /etc/nginx/sites-available/fflf-extractor
-```
-
-Change `server_name fflf.local;` to your server's hostname or IP address:
+Inside the main `server { ... }` block (the one listening on port 80/443), locate the area where other applications are listed (like `/assetmanager_frontend`, `/moses-spritesheet-packer`, etc.) and append the following location blocks:
 
 ```nginx
-server_name 192.168.1.100;    # Use your server's LAN IP
-# or
-server_name fflf.yourcompany.local;
+    # ------------------------------------------------------------>
+    # FFLF FRAME EXTRACTOR (Node.js App on Port 6969)
+    # ------------------------------------------------------------>
+    location = /fflf-extractor {
+        return 301 /fflf-extractor/;
+    }
+
+    location /fflf-extractor/ {
+        proxy_pass http://127.0.0.1:6969/; # Trailing slash is important to strip the subpath prefix
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # Max upload size — match the server's multer limit (2GB)
+        client_max_body_size 2G;
+
+        # Increase timeouts for large file uploads and FFmpeg processing
+        proxy_read_timeout    300s;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    300s;
+    }
 ```
 
-### 3. Enable the site
+### 3. Verify and Reload Nginx
+
+Test the Nginx configuration for syntax errors and reload the service:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/fflf-extractor /etc/nginx/sites-enabled/
-sudo nginx -t          # Test configuration
+sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 4. Access the app
+### 4. Access the App
 
-Open a browser on any machine in your network and navigate to:
+You can now access the application by navigating to:
+
 ```
-http://192.168.1.100   (or your configured hostname)
+http://YOUR_SERVER_IP/fflf-extractor
+# or
+https://YOUR_SERVER_IP/fflf-extractor
 ```
 
 ---
@@ -150,7 +174,7 @@ WorkingDirectory=/opt/fflf-extractor
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=5
-Environment=PORT=3000
+Environment=PORT=6969
 Environment=NODE_ENV=production
 
 # Logging
@@ -189,7 +213,7 @@ sudo journalctl -u fflf-extractor -f
 
 | Variable | Default  | Description                     |
 |----------|----------|---------------------------------|
-| `PORT`   | `3000`   | HTTP port the server listens on |
+| `PORT`   | `6969`   | HTTP port the server listens on |
 | `HOST`   | `0.0.0.0`| Bind address                    |
 
 ---

@@ -124,8 +124,8 @@ app.post('/api/extract', upload.single('video'), async (req, res) => {
       jobId,
       ffName,
       lfName,
-      ffUrl: `/api/download/${jobId}/ff`,
-      lfUrl: `/api/download/${jobId}/lf`
+      ffUrl: `api/download/${jobId}/ff`,
+      lfUrl: `api/download/${jobId}/lf`
     });
   } catch (error) {
     // Clean up on error

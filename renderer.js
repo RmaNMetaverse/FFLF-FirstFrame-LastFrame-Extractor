@@ -41,7 +41,7 @@ const appApi = {
     const formData = new FormData();
     formData.append('video', fileOrPath);
 
-    const response = await fetch('/api/extract', {
+    const response = await fetch('api/extract', {
       method: 'POST',
       body: formData
     });
